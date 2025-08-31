@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from "react";
 import API from "../services/api";
 import { toast, Toaster } from "react-hot-toast";
-import { Trash2, Plus, Edit3, Eye, EyeOff } from "lucide-react";
+import {
+  Trash2,
+  Plus,
+  Edit3,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import icon from "../assets/icon.svg";
-
 interface Note {
   _id: string;
   title: string;
@@ -15,9 +20,11 @@ const NotesPage: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [user, setUser] = useState<{ name: string; email: string } | null>(
+    null
+  );
   const [showForm, setShowForm] = useState(false);
-  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
+  const [expandedNotes, setExpandedNotes] = useState(new Set());
   const navigate = useNavigate();
 
   const token = localStorage.getItem("authToken");
@@ -60,25 +67,33 @@ const NotesPage: React.FC = () => {
   };
 
   const handleDeleteNote = async (id: string) => {
+    if (!id || id === "undefined" || id === "null") {
+      console.error("Invalid note ID provided:", id);
+      toast.error("Cannot delete note: Invalid ID");
+      return;
+    }
+
     try {
       await API.delete(`/notes/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNotes(notes.filter((note) => note._id !== id));
-      toast.success("Note deleted");
+      setNotes(notes.filter((note) => note.id !== id)); // Changed from note._id to note.id
+      toast.success("Note deleted successfully");
     } catch (err: any) {
+      console.error("Delete API error:", err);
       toast.error(err.response?.data?.message || "Failed to delete note");
     }
   };
-
   const toggleNoteExpansion = (noteId: string) => {
-    const newExpandedNotes = new Set(expandedNotes);
-    if (newExpandedNotes.has(noteId)) {
-      newExpandedNotes.delete(noteId);
-    } else {
-      newExpandedNotes.add(noteId);
-    }
-    setExpandedNotes(newExpandedNotes);
+    setExpandedNotes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(noteId)) {
+        newSet.delete(noteId);
+      } else {
+        newSet.add(noteId);
+      }
+      return newSet;
+    });
   };
 
   const handleLogout = () => {
@@ -89,10 +104,9 @@ const NotesPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Toaster />
-      
+
       {/* Mobile and Desktop Container */}
       <div className="max-w-md mx-auto lg:max-w-7xl lg:px-8">
-        
         {/* Mobile Layout */}
         <div className="lg:hidden bg-white min-h-screen">
           {/* Mobile Header */}
@@ -177,20 +191,22 @@ const NotesPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {notes.map((note) => (
+                  {notes.map((note, idx) => (
                     <div
-                      key={note._id}
+                      key={note._id || idx}
                       className="bg-white border border-[#D9D9D9] rounded-lg p-3 shadow-2xl"
-
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <h4 className="font-medium text-gray-900 mb-1">{note.title}</h4>
+                          <h4 className="font-medium text-gray-900 mb-1">
+                            {note.title}
+                          </h4>
                           <p className="text-sm text-gray-600 line-clamp-2">
-                            {expandedNotes.has(note._id) 
-                              ? note.content 
-                              : `${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}`
-                            }
+                            {expandedNotes.has(note._id)
+                              ? note.content
+                              : `${note.content.substring(0, 100)}${
+                                  note.content.length > 100 ? "..." : ""
+                                }`}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 ml-3">
@@ -199,11 +215,17 @@ const NotesPage: React.FC = () => {
                               onClick={() => toggleNoteExpansion(note._id)}
                               className="text-gray-400 hover:text-blue-500 transition-colors"
                             >
-                              {expandedNotes.has(note._id) ? <EyeOff size={16} /> : <Eye size={16} />}
+                              {expandedNotes.has(note._id) ? (
+                                <EyeOff size={16} />
+                              ) : (
+                                <Eye size={16} />
+                              )}
                             </button>
                           )}
                           <button
-                            onClick={() => handleDeleteNote(note._id)}
+                            onClick={() =>
+                              note._id && handleDeleteNote(note._id)
+                            }
                             className="text-gray-400 hover:text-red-500 transition-colors"
                           >
                             <Trash2 size={16} />
@@ -225,7 +247,9 @@ const NotesPage: React.FC = () => {
             <div className="flex justify-between items-center px-8 py-6">
               <div className="flex items-center gap-4">
                 <img src={icon} alt="logo" className="w-8 h-8" />
-                <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+                <h1 className="text-2xl font-semibold text-gray-900">
+                  Dashboard
+                </h1>
               </div>
               <button
                 onClick={handleLogout}
@@ -242,14 +266,16 @@ const NotesPage: React.FC = () => {
               <h2 className="text-3xl font-bold mb-2">Welcome, {user.name}!</h2>
               <p className="text-blue-100 text-lg">{user.email}</p>
               <div className="mt-6">
-                <p className="text-blue-100">You have {notes.length} {notes.length === 1 ? 'note' : 'notes'} saved</p>
+                <p className="text-blue-100">
+                  You have {notes.length}{" "}
+                  {notes.length === 1 ? "note" : "notes"} saved
+                </p>
               </div>
             </div>
           )}
 
           {/* Desktop Main Content */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-            
             {/* Create Note Section */}
             <div className="xl:col-span-1">
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-8">
@@ -257,7 +283,7 @@ const NotesPage: React.FC = () => {
                   <Plus size={20} />
                   Create New Note
                 </h3>
-                
+
                 <div className="space-y-4">
                   <input
                     type="text"
@@ -298,66 +324,90 @@ const NotesPage: React.FC = () => {
             {/* Notes Grid Section */}
             <div className="xl:col-span-2">
               <div className="mb-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Your Notes</h3>
-                <p className="text-gray-600">Manage and organize your personal notes</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Your Notes
+                </h3>
+                <p className="text-gray-600">
+                  Click on any note title to view its content
+                </p>
               </div>
-              
+
               {notes.length === 0 ? (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
                   <div className="text-gray-400 mb-4">
                     <Edit3 className="w-16 h-16 mx-auto" />
                   </div>
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">No notes yet</h4>
-                  <p className="text-gray-600 mb-6">Create your first note to get started with organizing your thoughts.</p>
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">
+                    No notes yet
+                  </h4>
+                  <p className="text-gray-600 mb-6">
+                    Create your first note to get started with organizing your
+                    thoughts.
+                  </p>
                   <button
-                    onClick={() => document.querySelector('input[placeholder="Enter note title..."]')?.scrollIntoView({ behavior: 'smooth' })}
-
+                    onClick={() =>
+                      document
+                        .querySelector(
+                          'input[placeholder="Enter note title..."]'
+                        )
+                        ?.scrollIntoView({ behavior: "smooth" })
+                    }
                     className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
                   >
                     Create Your First Note
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {notes.map((note) => (
                     <div
-                      key={note._id}
-                      className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                      key={note.id}
+                      className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200"
                     >
-                      <div className="flex justify-between items-start mb-3">
-                        <h4 className="text-lg font-semibold text-gray-900 flex-1 mr-4">
-                          {note.title}
-                        </h4>
-                        <div className="flex items-center gap-2">
-                          {note.content.length > 150 && (
-                            <button
-                              onClick={() => toggleNoteExpansion(note._id)}
-                              className="text-gray-400 hover:text-blue-500 transition-colors p-1"
-                              title={expandedNotes.has(note._id) ? "Show less" : "Show more"}
-                            >
-                              {expandedNotes.has(note._id) ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDeleteNote(note._id)}
-                            className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                            title="Delete note"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                      {/* Note Header - Always Visible */}
+                      <div className="flex justify-between items-center p-4">
+                        <button
+                          onClick={() => toggleNoteExpansion(note.id)}
+                          className="flex-1 text-left group"
+                          title="Click to view content"
+                        >
+                          <h4 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                            {note.title}
+                            <span className="text-gray-400 group-hover:text-blue-500 text-sm">
+                              {expandedNotes.has(note.id) ? "▲" : "▼"}
+                            </span>
+                          </h4>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {note.content.length} characters • Click to{" "}
+                            {expandedNotes.has(note.id) ? "hide" : "view"}
+                          </p>
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteNote(note.id)}
+                          className="text-gray-400 hover:text-red-500 transition-colors p-2 ml-2"
+                          title="Delete note"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+
+                      {/* Note Content - Shown/Hidden on Click */}
+                      {expandedNotes.has(note.id) && (
+                        <div className="px-4 pb-4 bg-gray-50 border-t border-gray-100">
+                          <div className="pt-3">
+                            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                              {note.content}
+                            </p>
+                          </div>
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <p className="text-xs text-gray-400">
+                              Created:{" "}
+                              {new Date(note.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
-                        {expandedNotes.has(note._id) 
-                          ? note.content 
-                          : `${note.content.substring(0, 150)}${note.content.length > 150 ? '...' : ''}`
-                        }
-                      </p>
-                      <div className="mt-4 pt-3 border-t border-gray-100">
-                        <p className="text-xs text-gray-400">
-                          {note.content.length} characters
-                        </p>
-                      </div>
+                      )}
                     </div>
                   ))}
                 </div>

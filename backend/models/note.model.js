@@ -1,13 +1,36 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Note = void 0;
-const mongoose_1 = __importDefault(require("mongoose"));
-const noteSchema = new mongoose_1.default.Schema({
-    user: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User", required: true },
-    title: { type: String, required: true },
-    content: { type: String, required: true },
-}, { timestamps: true });
-exports.Note = mongoose_1.default.model("Note", noteSchema);
+const mongoose = require('mongoose');
+
+const noteSchema = new mongoose.Schema({
+  user: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', 
+    required: [true, 'User ID is required']
+  },
+  title: { 
+    type: String, 
+    required: [true, 'Title is required'],
+    trim: true,
+    maxlength: [100, 'Title cannot be more than 100 characters']
+  },
+  content: { 
+    type: String, 
+    required: [true, 'Content is required'],
+    trim: true
+  },
+}, { 
+  timestamps: true,
+  toJSON: {
+    transform: function(doc, ret) {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    }
+  }
+});
+
+noteSchema.index({ title: 'text', content: 'text' });
+
+const Note = mongoose.model('Note', noteSchema);
+
+module.exports = Note;

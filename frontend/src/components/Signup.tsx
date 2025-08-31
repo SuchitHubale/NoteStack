@@ -87,9 +87,9 @@ const Signup: React.FC = () => {
         <span className="text-2xl font-bold text-gray-800 ml-2">HD</span>
       </div>
 
-      <div className="flex-1 flex justify-center p-4 md:p-8 items-start md:items-center">
+      <div className="flex-1 flex justify-center p-4 pt-6 md:p-8 items-start md:items-center mt-2.5">
         <div className="w-full max-w-md md:p-6 bg-white">
-          <div className="flex md:hidden justify-center items-center mb-6">
+          <div className="flex md:hidden justify-center items-center mb-4">
             <img src={icon} alt="logo" />
             <span className="text-3xl font-bold text-gray-800 ml-2">HD</span>
           </div>
