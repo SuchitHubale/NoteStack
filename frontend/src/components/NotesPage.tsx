@@ -11,9 +11,12 @@ import {
 import { useNavigate } from "react-router-dom";
 import icon from "../assets/icon.svg";
 interface Note {
-  _id: string;
+  id: string;           // Add this - your backend transforms _id to id
   title: string;
   content: string;
+  user: string;
+  createdAt: string;    // Add this - timestamps: true creates this
+  updatedAt: string;    // Add this - timestamps: true creates this
 }
 
 const NotesPage: React.FC = () => {
@@ -193,7 +196,7 @@ const NotesPage: React.FC = () => {
                 <div className="space-y-2">
                   {notes.map((note, idx) => (
                     <div
-                      key={note._id || idx}
+                      key={note.id || idx}
                       className="bg-white border border-[#D9D9D9] rounded-lg p-3 shadow-2xl"
                     >
                       <div className="flex justify-between items-start">
@@ -202,7 +205,7 @@ const NotesPage: React.FC = () => {
                             {note.title}
                           </h4>
                           <p className="text-sm text-gray-600 line-clamp-2">
-                            {expandedNotes.has(note._id)
+                            {expandedNotes.has(note.id)
                               ? note.content
                               : `${note.content.substring(0, 100)}${
                                   note.content.length > 100 ? "..." : ""
@@ -212,10 +215,10 @@ const NotesPage: React.FC = () => {
                         <div className="flex items-center gap-2 ml-3">
                           {note.content.length > 100 && (
                             <button
-                              onClick={() => toggleNoteExpansion(note._id)}
+                              onClick={() => toggleNoteExpansion(note.id)}
                               className="text-gray-400 hover:text-blue-500 transition-colors"
                             >
-                              {expandedNotes.has(note._id) ? (
+                              {expandedNotes.has(note.id) ? (
                                 <EyeOff size={16} />
                               ) : (
                                 <Eye size={16} />
@@ -224,7 +227,7 @@ const NotesPage: React.FC = () => {
                           )}
                           <button
                             onClick={() =>
-                              note._id && handleDeleteNote(note._id)
+                              note.id && handleDeleteNote(note.id)
                             }
                             className="text-gray-400 hover:text-red-500 transition-colors"
                           >
